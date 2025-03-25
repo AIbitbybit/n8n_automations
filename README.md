@@ -1,92 +1,60 @@
-# n8n Self-Hosted Docker Installation
+# n8n Workflow Automations
 
-This repository contains the Docker configuration files to run n8n workflow automation platform.
+This repository contains workflow automations built with n8n, focused on providing AI-powered customer support solutions.
 
-## Prerequisites
+Copy paste the JSON into n8n for better viewing.
 
-- Docker and Docker Compose installed on your system
+## Workflows
 
-## Getting Started
+### Chat Support System
 
-1. Clone this repository:
+The `chat_support.json` workflow creates an AI-powered customer support system that:
 
-   ```
-   git clone <your-repository-url>
-   cd n8n
-   ```
+- Receives incoming chat messages from users
+- Uses OpenAI's GPT-4o to analyze message sentiment (positive/neutral or negative)
+- Routes messages based on sentiment analysis:
+  - For negative sentiment: Escalates to a human agent via Slack
+  - For neutral/positive sentiment: Connects to a RAG (Retrieval Augmented Generation) API to provide document-based answers
+- Provides real-time responses back to users with relevant information or support status
 
-2. Before starting the container, modify the `docker-compose.yml` file:
+#### Key Features
 
-   - Change the `N8N_ENCRYPTION_KEY` to a secure random string
-   - Adjust other environment variables as needed
+- **Sentiment Analysis**: Automatically categorizes incoming messages as neutral/positive or negative
+- **Human Escalation**: Negative messages are routed to a dedicated Slack channel where agents can be assigned
+- **Knowledge Base Integration**: Connects to a RAG API to retrieve document-based answers for standard queries
+- **Agent Assignment**: Tracks which agent is assigned to a case and communicates this to the user
+- **Response Handling**: Manages both automated and human responses through a unified system
 
-3. Start n8n:
+#### Technical Components
 
-   ```
-   docker-compose up -d
-   ```
+- **Chat Trigger Node**: Entry point for incoming messages
+- **AI Agent**: Uses OpenAI GPT-4o to analyze message sentiment
+- **Switch Node**: Routes the flow based on sentiment analysis results
+- **HTTP Request Node**: Connects to the RAG API (running at host.docker.internal:8000)
+- **Slack Integration**: Sends messages to the support-escalations channel for agent assignment
+- **Memory System**: Maintains chat context for more coherent responses
 
-4. Access n8n in your browser at:
+#### Setup Requirements
 
-   ```
-   http://localhost:5678
-   ```
+- n8n instance with OpenAI API credentials configured
+- Slack workspace with OAuth2 authentication
+- RAG API service running on port 8000
 
-5. To stop n8n:
-   ```
-   docker-compose down
-   ```
+## Installation
 
-## Persistent Data
+1. Clone this repository
+2. Copy the workflows to your n8n instance
+3. Configure the required credentials:
+   - OpenAI API key
+   - Slack OAuth2 credentials
+4. Start the RAG API service on port 8000
+5. Test the workflow by sending a message through the chat interface
 
-All n8n data (including workflows, credentials, and SQLite database) is stored in the `./data/.n8n` directory, which is mapped to the container.
+## Usage
 
-## Workflow Management
+1. Deploy your n8n instance using the included docker-compose.yml
+2. Import the workflows from the workflows directory
+3. Configure the necessary credentials
+4. Activate the workflows
 
-The `workflows` directory is intended for storing exported workflow JSON files. When you create workflows in n8n:
-
-1. Export your workflows from the n8n UI
-2. Save them in the `workflows` directory with descriptive names
-3. Commit them to Git to track changes and share with others
-
-This allows you to version control your workflows and share them with your team.
-
-## Updating n8n
-
-To update n8n to the latest version:
-
-```
-docker-compose pull
-docker-compose down
-docker-compose up -d
-```
-
-## Backing Up
-
-To backup your n8n instance, simply copy the entire `./data/.n8n` directory.
-
-## Pushing to GitHub
-
-To share your n8n configurations via GitHub:
-
-1. Create a new GitHub repository:
-
-   - Go to https://github.com/new
-   - Name your repository and create it
-
-2. Connect your local repository to GitHub:
-
-   ```
-   git remote add origin https://github.com/yourusername/your-repo-name.git
-   git branch -M main
-   git push -u origin main
-   ```
-
-3. After making changes to your workflows in n8n, export them to the `workflows` directory and commit them:
-   ```
-   git add workflows/
-   git commit -m "Updated workflows"
-   git push
-   ```
-
-Remember that the `.gitignore` file is set up to exclude sensitive data like credentials and the database from being pushed to GitHub.
+For more detailed implementation guides, see the documentation within each workflow.
