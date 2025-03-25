@@ -41,6 +41,16 @@ This repository contains the Docker configuration files to run n8n workflow auto
 
 All n8n data (including workflows, credentials, and SQLite database) is stored in the `./data/.n8n` directory, which is mapped to the container.
 
+## Workflow Management
+
+The `workflows` directory is intended for storing exported workflow JSON files. When you create workflows in n8n:
+
+1. Export your workflows from the n8n UI
+2. Save them in the `workflows` directory with descriptive names
+3. Commit them to Git to track changes and share with others
+
+This allows you to version control your workflows and share them with your team.
+
 ## Updating n8n
 
 To update n8n to the latest version:
@@ -54,3 +64,29 @@ docker-compose up -d
 ## Backing Up
 
 To backup your n8n instance, simply copy the entire `./data/.n8n` directory.
+
+## Pushing to GitHub
+
+To share your n8n configurations via GitHub:
+
+1. Create a new GitHub repository:
+
+   - Go to https://github.com/new
+   - Name your repository and create it
+
+2. Connect your local repository to GitHub:
+
+   ```
+   git remote add origin https://github.com/yourusername/your-repo-name.git
+   git branch -M main
+   git push -u origin main
+   ```
+
+3. After making changes to your workflows in n8n, export them to the `workflows` directory and commit them:
+   ```
+   git add workflows/
+   git commit -m "Updated workflows"
+   git push
+   ```
+
+Remember that the `.gitignore` file is set up to exclude sensitive data like credentials and the database from being pushed to GitHub.

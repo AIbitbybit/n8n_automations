@@ -1,0 +1,24 @@
+# Exclude everything
+*
+
+# But include these files/folders
+!.gitignore
+!README.md
+!workflows/
+!workflows/**
+
+# Exclude specific files within the workflows directory
+workflows/**/.DS_Store
+workflows/**/*.pyc
+workflows/**/__pycache__/
+
+# Exclude specific data that should never be tracked
+*.db
+*.sqlite
+*.sqlite3
+.env
+.env.*
+!.env.example
+credentials.json
+*.log
+docker-compose.yml

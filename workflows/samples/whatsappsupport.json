@@ -1,0 +1,325 @@
+{
+  "name": "chat_support",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [0, -200],
+      "id": "8142006f-676f-47a8-a9ac-f09de0b6b96a",
+      "name": "When chat message received",
+      "webhookId": "2f596c6c-7d32-4ed5-b0b3-1240c4b50d77"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "GPT-4O"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "You are a helpful support case handler",
+              "role": "system"
+            },
+            {
+              "content": "=Categorise the sentiment of the customer's message: \n {{ $json.Body }}\n\nIt can either be:\n- neutral or positive\n- negative"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [220, -200],
+      "id": "e5bdbca3-d529-4195-864f-ffd5f33389cf",
+      "name": "OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "0pHUGt34ZFq4jnDD",
+          "name": "OpenAi account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.message.content.sentiment.toLowerCase() }}",
+                    "rightValue": "negative",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "0800f227-8921-493b-af56-e1b257c40cbb"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "c6654a01-8ef6-4141-91c4-6af4ceb21479",
+                    "leftValue": "={{ $json.message.content.sentiment }}",
+                    "rightValue": "neutral or positive",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [600, -200],
+      "id": "41fa2f3c-2411-4e1e-aab0-43f7aea8de94",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "operation": "sendAndWait",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C08KE83HNJV",
+          "mode": "list",
+          "cachedResultName": "support-escalations"
+        },
+        "message": "=Hello,  {{ $('When chat message received').item.json.ProfileName }} with Whatsapp: {{ $('When chat message received').item.json.From }} has sent a message in chat : {{ $('When chat message received').item.json.Body }}\n\nSentiment: {{ $('OpenAI').item.json.message.content.sentiment }}",
+        "responseType": "customForm",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Who will be assigned to the case? ",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [1140, -420],
+      "id": "2c0fbaa7-7ceb-406b-9869-11906975b99b",
+      "name": "Slack1",
+      "webhookId": "0dc34914-76ef-47c7-8fe6-2d9f2aa1822d",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "Fx23G7lUEOcTJf43",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1wbZzNXSAoLmTfzIcRL_hbvYbF8pjDKpmAAzRxTrlJxI",
+          "mode": "list",
+          "cachedResultName": "Whatsapp Cases",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1wbZzNXSAoLmTfzIcRL_hbvYbF8pjDKpmAAzRxTrlJxI/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1wbZzNXSAoLmTfzIcRL_hbvYbF8pjDKpmAAzRxTrlJxI/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Original Message": "={{ $('When chat message received').item.json.Body }}",
+            "Sentiment": "={{ $('Switch').item.json.message.content.sentiment }}",
+            "Profile Name": "={{ $('When chat message received').item.json.ProfileName }}",
+            "WhatsApp Number": "={{ $('When chat message received').item.json.From }}",
+            "Assigned Agent": "={{ $json.data['Who will be assigned to the case? '] }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Original Message",
+              "displayName": "Original Message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Sentiment",
+              "displayName": "Sentiment",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Profile Name",
+              "displayName": "Profile Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "WhatsApp Number",
+              "displayName": "WhatsApp Number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Assigned Agent",
+              "displayName": "Assigned Agent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [1360, -420],
+      "id": "3c5a252a-3648-4677-96d5-08f005c741a9",
+      "name": "Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "ZOal9BjupYmBBI8C",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "When chat message received": [
+      {
+        "json": {
+          "SmsMessageSid": "SMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+          "NumMedia": "0",
+          "ProfileName": "John Doe",
+          "SmsSid": "SMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+          "WaId": "1234567890",
+          "SmsStatus": "received",
+          "Body": "Hi, what is taking so long? How do I cancel?",
+          "To": "whatsapp:+14155238886",
+          "NumSegments": "1",
+          "MessageSid": "SMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+          "AccountSid": "ACXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+          "From": "whatsapp:+1234567890",
+          "ApiVersion": "2010-04-01"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "OpenAI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Slack1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack1": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "6d4cf5ee-085f-423b-a6d4-1771bdddf7e7",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "602bb8e1e6ecdd1e7215e8ba343406efb19a4624858e69b547dc8cf5d6e8bc92"
+  },
+  "id": "QVGJ9N7est0FuC8n",
+  "tags": []
+}
